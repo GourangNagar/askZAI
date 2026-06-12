@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+langchain
+langchain-chroma
+langchain-community
+langchain-openai
+chromadb
+python-dotenv
+pydantic
+pyjwt
+httpx
+itsdangerous
+bcrypt
+numpy
+filelock
