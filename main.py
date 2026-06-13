@@ -286,6 +286,12 @@ class TransactionEditPayload(BaseModel):
     category: str
     description: str
 
+class TransactionDirectPayload(BaseModel):
+    amount: float
+    category: str
+    description: str
+    type: str
+
 class ReportPayload(BaseModel):
     month: str
 
@@ -448,6 +454,21 @@ async def delete_finance(tx_id: str, user_id: str = Depends(verify_token), db: S
     db.delete(t)
     db.commit()
     return {"action": "deleted", "tx_id": tx_id}
+
+@app.post("/api/finances/direct")
+async def add_finance_direct(payload: TransactionDirectPayload, user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
+    t = Transaction(
+        id=str(uuid.uuid4()),
+        user_id=user_id,
+        amount=payload.amount,
+        category=payload.category,
+        description=payload.description,
+        tx_type=payload.type.lower(),
+        date=datetime.now(IST).strftime("%Y-%m-%d")
+    )
+    db.add(t)
+    db.commit()
+    return {"action": "saved", "tx_id": t.id}
 
 @app.put("/api/finances/{tx_id}")
 async def edit_finance(tx_id: str, payload: TransactionEditPayload, user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
