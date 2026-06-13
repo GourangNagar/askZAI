@@ -343,11 +343,11 @@ const MoneyDashboard = ({ token }) => {
         filteredTransactions.map(t => (
           <div key={t.id} className="memory-card">
             <div className="memory-content">
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <strong style={{ color: t.type === 'expense' ? 'var(--danger)' : t.type === 'income' ? 'var(--success)' : 'var(--save-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <strong style={{ color: t.type === 'expense' ? 'var(--danger)' : t.type === 'income' ? 'var(--success)' : 'var(--save-color)', flex: 1, wordBreak: 'break-word' }}>
                   {t.type.toUpperCase()}: {formatINR(t.amount)} {t.currency}
                 </strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>{t.category}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', textAlign: 'right', flexShrink: 0, maxWidth: '45%' }}>{t.category}</span>
               </div>
               <div className="memory-fact">{t.description}</div>
               <div className="memory-meta"><span>{formatDateString(t.date)}</span></div>
