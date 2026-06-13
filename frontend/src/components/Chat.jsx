@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Send, Bot, User } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
 
 const Chat = ({ token }) => {
   const [messages, setMessages] = useState([]);
@@ -25,7 +29,7 @@ const Chat = ({ token }) => {
 
     try {
       const history = messages.slice(-4).map(m => `${m.role === 'user' ? 'User' : 'Zai'}: ${m.content}`);
-      const res = await fetch(`http://${window.location.hostname}:8001/webhook`, {
+      const res = await fetch(`${API_BASE_URL}/webhook`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

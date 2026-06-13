@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+
 const Layout = ({ onLogout }) => {
   const [userName, setUserName] = useState("Zai");
   const [isLightMode, setIsLightMode] = useState(() => {
@@ -22,7 +24,7 @@ const Layout = ({ onLogout }) => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('kai_token');
-        const res = await fetch(`http://${window.location.hostname}:8001/api/profile`, {
+        const res = await fetch(`${API_BASE_URL}/api/profile`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {

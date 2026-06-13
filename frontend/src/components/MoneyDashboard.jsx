@@ -3,6 +3,8 @@ import Chart from 'chart.js/auto';
 import { Pencil, Trash2, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+
 const MoneyDashboard = ({ token }) => {
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -63,16 +65,16 @@ const MoneyDashboard = ({ token }) => {
     setLoading(true);
     try {
       // Fetch Profile Categories
-      const pRes = await fetch(`http://${window.location.hostname}:8001/api/profile`, {
+      const pRes = await fetch(`${API_BASE_URL}/api/profile`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (pRes.ok) {
         const pData = await pRes.json();
-        setCategories(['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Salary', 'Income', 'Groceries', 'Other', ...(pData.custom_categories || [])]);
+        setCategories(['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Salary', 'Income', 'Investment', 'Groceries', 'Other', ...(pData.custom_categories || [])]);
       }
 
       // Fetch Transactions
-      const res = await fetch(`http://${window.location.hostname}:8001/api/finances`, {
+      const res = await fetch(`${API_BASE_URL}/api/finances`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -103,7 +105,7 @@ const MoneyDashboard = ({ token }) => {
   const deleteTx = async (id) => {
     if (!window.confirm("Delete transaction?")) return;
     try {
-      await fetch(`http://${window.location.hostname}:8001/api/finances/${id}`, {
+      await fetch(`${API_BASE_URL}/api/finances/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -128,7 +130,7 @@ const MoneyDashboard = ({ token }) => {
         category: editCategory,
         description: editDesc
       };
-      const res = await fetch(`http://${window.location.hostname}:8001/api/finances/${editModal.tx.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/finances/${editModal.tx.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +154,7 @@ const MoneyDashboard = ({ token }) => {
     setReportText('');
     
     try {
-      const res = await fetch(`http://${window.location.hostname}:8001/api/generate_report`, {
+      const res = await fetch(`${API_BASE_URL}/api/generate_report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,7 +182,9 @@ const MoneyDashboard = ({ token }) => {
     const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense');
     const totalInc = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
     const totalExp = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const remainingBudget = totalInc - totalExp;
+    const saveTransactions = filteredTransactions.filter(t => t.type === 'save');
+    const totalInvested = saveTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const remainingBudget = totalInc - totalExp - totalInvested;
 
     const catMap = {};
     expenseTransactions.forEach(t => {
@@ -190,8 +194,14 @@ const MoneyDashboard = ({ token }) => {
     const labels = Object.keys(catMap);
     const data = Object.values(catMap);
 
-    const distinctColors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
+    const distinctColors = ['#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
     const backgroundColors = labels.map((_, i) => distinctColors[i % distinctColors.length]);
+
+    if (totalInvested > 0) {
+      labels.push('Invested');
+      data.push(totalInvested);
+      backgroundColors.push('#3b82f6'); // Blue for investments
+    }
 
     if (remainingBudget > 0) {
       labels.push('Remaining Budget');
@@ -226,7 +236,8 @@ const MoneyDashboard = ({ token }) => {
 
   const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const totalSaved = totalIncome - totalExpense;
+  const totalInvested = filteredTransactions.filter(t => t.type === 'save').reduce((sum, t) => sum + t.amount, 0);
+  const totalSaved = totalIncome - totalExpense - totalInvested;
 
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const displayMonth = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
@@ -255,8 +266,12 @@ const MoneyDashboard = ({ token }) => {
           <p>₹{formatINR(totalExpense)}</p>
         </div>
         <div className="finance-card save-card">
-          <h3>Saved</h3>
-          <p>₹{formatINR(totalSaved)}</p>
+          <h3>Invested</h3>
+          <p style={{ color: '#3b82f6' }}>₹{formatINR(Number(totalInvested))}</p>
+        </div>
+        <div className="finance-card save-card">
+          <h3>Budget</h3>
+          <p>₹{formatINR(Number(totalSaved))}</p>
         </div>
       </div>
 

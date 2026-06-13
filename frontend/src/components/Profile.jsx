@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+
 const Profile = ({ token, onLogout }) => {
   const [profile, setProfile] = useState({
     name: '',
@@ -17,7 +19,7 @@ const Profile = ({ token, onLogout }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`http://${window.location.hostname}:8001/api/profile`, {
+      const res = await fetch(`${API_BASE_URL}/api/profile`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -34,7 +36,7 @@ const Profile = ({ token, onLogout }) => {
     setLoading(true);
     setMsg('');
     try {
-      const res = await fetch(`http://${window.location.hostname}:8001/api/profile`, {
+      const res = await fetch(`${API_BASE_URL}/api/profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

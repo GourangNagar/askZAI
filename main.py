@@ -302,7 +302,7 @@ Here are their transactions for this month:
 
 Write a brutally honest, strict, and highly analytical 3-paragraph financial report.
 Paragraph 1: Executive Summary. State exactly how much they made vs spent. If they are bleeding cash, tell them directly.
-Paragraph 2: Spending Analysis. Identify their worst spending habits this month. Call out specific categories where they wasted money. Be strict.
+Paragraph 2: Spending Analysis. Identify their worst spending habits this month. Call out specific categories where they wasted money. Be strict. However, praise them if they have logged 'Investment' transactions or saved money, as investing is highly commendable and critical for wealth building.
 Paragraph 3: Action Plan. Give them a ruthless, actionable financial plan for next month based on their profession and current burn rate.
 
 Format the output in clean Markdown. Be concise but impactful. Do not hold back."""
@@ -336,7 +336,7 @@ async def webhook(
         if route == "FINANCE":
             # Load user's profile for custom categories
             profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-            base_categories = ["Food", "Transport", "Utilities", "Entertainment", "Shopping", "Salary", "Income", "Groceries", "Other"]
+            base_categories = ["Food", "Transport", "Utilities", "Entertainment", "Shopping", "Salary", "Income", "Investment", "Groceries", "Other"]
             cat_list = base_categories.copy()
             if profile and profile.custom_categories:
                 try:

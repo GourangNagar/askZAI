@@ -367,7 +367,7 @@ body.light-theme .month-nav { color: var(--text-main); }
 
 .finance-summary-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
 }

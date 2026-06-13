@@ -1,0 +1,8 @@
+.venv/
+data/
+frontend/
+__pycache__/
+*.pyc
+.env
+.git/
+.agents/

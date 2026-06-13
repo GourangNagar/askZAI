@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Coins, User, Lock, ArrowRight, Wallet, Shield } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
 
 const Auth = ({ onLogin }) => {
   const [mode, setMode] = useState('login');
@@ -21,7 +26,7 @@ const Auth = ({ onLogin }) => {
     const endpoint = mode === 'login' ? '/auth/login' : mode === 'register' ? '/auth/register' : '/auth/reset-password';
 
     try {
-      const res = await fetch(`http://${window.location.hostname}:8001${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
