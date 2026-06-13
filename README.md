@@ -41,10 +41,11 @@ Once logged in, you will see a sleek chat interface.
 
 ### 3. Customize Your Profile
 
-Click the **Profile** tab in the top right. Here you can tell Zai exactly how you want to be treated.
+Click the **Profile** tab in the top right. This is the "Brain Control Center" for Zai, where you define its boundaries and its persona:
 
-- *Example:* "I am a software engineer. Only give me extremely short, factual answers without any conversational fluff."
-- Zai will read these instructions before *every single response*.
+- **Custom Categories (The Boundaries):** If we let the AI freely name categories, your dashboard pie chart would become a fragmented mess of 100 different slices (e.g., classifying a burger as "Fast Food" on Monday and "Junk Food" on Tuesday). By defining strict custom categories here, we force the AI to map all your unstructured text (like "I bought a burger") strictly into one of your approved buckets.
+- **Profession (The Persona):** Your profession heavily dictates the financial advice Zai gives you in the AI Insights Report. If you tell Zai you are a "Medical Student", it will generate sympathetic advice about managing loans on a tight budget. If you are an "Investment Banker", it will give you aggressive wealth-building strategies.
+- **AI Instructions:** Set global rules like "Only give me extremely short, factual answers without conversational fluff," and Zai will obey them before every single response.
 
 ---
 
