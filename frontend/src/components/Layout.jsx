@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { useLocation, NavLink, Navigate } from 'react-router-dom';
+import MoneyDashboard from './MoneyDashboard';
+import Chat from './Chat';
+import Profile from './Profile';
 import { Sun, Moon } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
 
-const Layout = ({ onLogout }) => {
+const Layout = ({ onLogout, token }) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   const [userName, setUserName] = useState("Zai");
   const [isLightMode, setIsLightMode] = useState(() => {
     return localStorage.getItem('theme') === 'light';
@@ -69,7 +75,16 @@ const Layout = ({ onLogout }) => {
         </div>
       </header>
       <main>
-        <Outlet />
+        {currentPath === '/' && <Navigate to="/money" replace />}
+        <div style={{ display: currentPath.includes('/money') ? 'block' : 'none', height: '100%' }}>
+          <MoneyDashboard token={token} />
+        </div>
+        <div style={{ display: currentPath.includes('/chat') ? 'block' : 'none', height: '100%' }}>
+          <Chat token={token} />
+        </div>
+        <div style={{ display: currentPath.includes('/profile') ? 'block' : 'none', height: '100%' }}>
+          <Profile token={token} onLogout={onLogout} />
+        </div>
       </main>
     </div>
   );

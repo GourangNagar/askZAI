@@ -1,11 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Trash2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
 
 const Chat = ({ token }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('kai_chat_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kai_chat_history', JSON.stringify(messages));
+  }, [messages]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
@@ -17,6 +24,13 @@ const Chat = ({ token }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const clearChat = () => {
+    if (window.confirm("Clear chat history?")) {
+      setMessages([]);
+      localStorage.removeItem('kai_chat_history');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,8 +66,19 @@ const Chat = ({ token }) => {
   };
 
   return (
-    <div className="chat-container">
-      <div className="chat-messages">
+    <div className="chat-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {messages.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem' }}>
+          <button 
+            onClick={clearChat} 
+            title="Clear Chat History" 
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem' }}
+          >
+            <Trash2 size={16} /> Clear Chat
+          </button>
+        </div>
+      )}
+      <div className="chat-messages" style={{ flex: 1 }}>
         {messages.length === 0 && (
           <div className="empty-state">No messages yet. Ask me a question or log an expense!</div>
         )}

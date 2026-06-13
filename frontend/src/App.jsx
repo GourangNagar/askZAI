@@ -26,12 +26,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout onLogout={handleLogout} />}>
-          <Route index element={<Navigate to="/money" replace />} />
-          <Route path="money" element={<MoneyDashboard token={token} />} />
-          <Route path="chat" element={<Chat token={token} />} />
-          <Route path="profile" element={<Profile token={token} onLogout={handleLogout} />} />
-        </Route>
+        <Route path="/*" element={<Layout onLogout={handleLogout} token={token} />} />
       </Routes>
     </Router>
   );

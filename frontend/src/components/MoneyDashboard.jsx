@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import { Pencil, Trash2, ChevronLeft, ChevronRight, FileText, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useLocation } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
 
@@ -11,6 +12,7 @@ const MoneyDashboard = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  const location = useLocation();
 
   // Edit Modal State
   const [editModal, setEditModal] = useState({ show: false, tx: null });
@@ -47,12 +49,19 @@ const MoneyDashboard = ({ token }) => {
     // Auto-refresh when app comes back to foreground (e.g. returning from Shortcuts)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && token) {
-        fetchData();
+        fetchData(true);
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [currentMonth, token]);
+
+  // Silent background refresh when switching to this tab from Chat
+  useEffect(() => {
+    if (location.pathname.includes('/money') && token) {
+      fetchData(true);
+    }
+  }, [location.pathname, token]);
 
   useEffect(() => {
     if (filteredTransactions.length >= 0) {
@@ -71,8 +80,8 @@ const MoneyDashboard = ({ token }) => {
     return () => observer.disconnect();
   }, [filteredTransactions, currentMonth]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // Fetch concurrently to halve loading times!
       const [pRes, res] = await Promise.all([
@@ -95,7 +104,7 @@ const MoneyDashboard = ({ token }) => {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
