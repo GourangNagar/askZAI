@@ -14,10 +14,9 @@ Zai is engineered for scale, privacy, and low-latency responses, leveraging a mo
 
 - **Agentic LLM Intent Router:** Replaced brittle heuristic/math-based routing with a dynamic LLM intent classifier (`gpt-4o-mini`). Zai intelligently understands the semantic difference between *"I make 100k"* (SAVE) and *"How much do I make?"* (QUERY), automatically executing the correct downstream pipeline.
 - **Persistent RAG Pipeline:** Integrates **ChromaDB** for highly accurate semantic vector search, allowing Zai to retrieve the exact memories needed to answer questions in milliseconds.
-- **Relational Graph Engine:** Built a custom **SQLite-backed graph extraction engine** that dynamically parses unstructured text into `(Entity-Relation-Entity)` tuples, allowing Zai to query 1-hop subgraphs to understand complex relational contexts.
-- **Multi-Tenant FastAPI Backend:** A highly concurrent **FastAPI** server using secure **JWT-based authentication** and **Bcrypt** hashing. Users are strictly isolated in their own data directories.
-- **Deep Sleep Memory Consolidation:** An automated memory compaction algorithm that chunks and merges disjointed facts into dense, structured summaries—drastically reducing context-window token costs and improving AI accuracy over time.
-- **Serverless GCP Cloud Run Deployment:** Fully Dockerized and deployed to **Google Cloud Run**, elegantly handling **GCS Fuse** filesystem limitations to achieve a robust, stateless serverless architecture with persistent cloud storage mounts.
+- **Relational Graph Engine:** Built a custom graph extraction engine that dynamically parses unstructured text into `(Entity-Relation-Entity)` tuples, allowing Zai to query 1-hop subgraphs to understand complex relational contexts.
+- **Multi-Tenant FastAPI Backend:** A highly concurrent **FastAPI** server using secure **JWT-based authentication** and **Bcrypt** hashing.
+- **Serverless Cloud Deployment:** The React frontend is deployed globally via **Vercel**, the FastAPI backend is hosted on **Render**, and all persistent data is securely stored in a scalable **Supabase PostgreSQL** database.
 
 ---
 
@@ -36,9 +35,9 @@ If Zai is already deployed on the cloud, here is how you use it:
 
 Once logged in, you will see a sleek chat interface.
 
-- **Save a Memory:** Just tell Zai a fact! Type *"I bought a coffee for $4.50 today"* or *"My friend Sarah is allergic to peanuts"*. Zai's **LLM Router** will instantly detect that this is a fact and save it to your private vault.
+- **Save a Memory:** Just tell Zai a fact! Type *"I bought a coffee for 100 Rupees today"* or *"My friend Sarah is allergic to peanuts"*. Zai's **LLM Router** will instantly detect that this is a fact and save it to your private vault.
 - **Ask a Question:** Ask *"How much have I spent on coffee?"* or *"What is Sarah allergic to?"* Zai will scan your private vector database and instantly answer!
-- **Do Both at Once:** Type *"I spent $50 on groceries, how much money do I have left?"* Zai's router will smartly save your expense *and* answer your question in one go!
+- **Do Both at Once:** Type *"I spent 5000 Rupees on groceries, how much money do I have left?"* Zai's router will smartly save your expense *and* answer your question in one go!
 
 ### 3. Customize Your Profile
 
@@ -82,7 +81,7 @@ This shortcut reads your expenses and sends them to your private Zai vault.
 3. Add an **If** action: If **File** `has any value`.
 4. Inside the If block, add a **Text** action: `Here are my expenses for today: [File]`
 5. Inside the If block, add a **Get Contents of URL** action:
-   - URL: `https://YOUR_ZAI_URL.run.app/webhook` *(Important: it must end with /webhook)*
+   - URL: `https://askzai.onrender.com/webhook`
    - Method: **POST**
    - Headers: Key = `Authorization`, Text = `Bearer <PASTE_YOUR_API_TOKEN_HERE>`
    - Request Body: **JSON**
@@ -120,7 +119,8 @@ cp .env.example .env
 Edit your `.env` and configure:
 
 - `OPENAI_API_KEY`: Your OpenAI Key (`sk-proj-...`)
-- `JWT_SECRET`: A long, random, secure string used to sign user tokens. **Keep this secret!**
+- `JWT_SECRET`: A long, random, secure string used to sign user tokens.
+- `DATABASE_URL`: Your Supabase PostgreSQL Connection String.
 
 ### 2. Local Initialization
 
@@ -138,20 +138,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 Open **<http://localhost:8000>** in your browser.
 
-### 3. Google Cloud Run Deployment
+### 3. Cloud Deployment
 
-Zai is fully Dockerized and ready for Google Cloud Run serverless deployment.
+Zai is fully containerized and designed for separated front-end/back-end hosting:
 
-```bash
-gcloud run deploy kai-backend \
-  --source . \
-  --region asia-south1 \
-  --project united-project-j7 \
-  --allow-unauthenticated \
-  --set-env-vars="OPENAI_API_KEY=your_key,JWT_SECRET=your_jwt_secret" \
-  --execution-environment=gen2 \
-  --add-volume=name=data-vol,type=cloud-storage,bucket=kai-memory-data \
-  --add-volume-mount=volume=data-vol,mount-path=/app/data
-```
-
-> **Note:** The GCS volume mount (`/app/data`) ensures that your SQLite users database and ChromaDB vector embeddings survive across serverless container restarts. Without this, your data will wipe every time the server spins down!
+1. **Database:** Create a free [Supabase](https://supabase.com) project and copy your PostgreSQL connection string into `DATABASE_URL`.
+2. **Backend (Render):** Connect your GitHub repository to a Render Web Service. Ensure you set the `DATABASE_URL`, `OPENAI_API_KEY`, and `JWT_SECRET` environment variables.
+3. **Frontend (Vercel):** Connect your GitHub repository to Vercel. Set the `VITE_API_URL` environment variable to your live Render URL (e.g., `https://askzai.onrender.com`).

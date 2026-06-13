@@ -74,7 +74,7 @@ const Chat = ({ token }) => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="I spent $15 on lunch..."
+          placeholder="I spent 150 on lunch..."
           disabled={loading}
         />
         <button type="submit" className="primary-btn" disabled={loading} style={{ width: 'auto' }}>

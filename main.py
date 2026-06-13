@@ -182,7 +182,7 @@ ROUTER_PROMPT = PromptTemplate.from_template(
 Determine if the user's message is logging a financial transaction or asking a question about their finances.
 
 Categories:
-- FINANCE: The user is explicitly logging a financial transaction (e.g., spending money, receiving salary, paying EMI). (e.g., "I spent $15 on lunch", "Received 5000 salary")
+- FINANCE: The user is explicitly logging a financial transaction (e.g., spending money, receiving salary, paying EMI). (e.g., "I spent 150 on lunch", "Received 5000 salary")
 - QUERY: The user is asking a question or requesting information about their spending or finances. (e.g., "What is my salary?", "How much did I spend on food?")
 
 User message: {text}
