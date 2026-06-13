@@ -368,7 +368,7 @@ async def webhook(
                 new_tx = Transaction(
                     id=tx_id,
                     user_id=user_id,
-                    amount=tx_data.get('amount', 0),
+                    amount=abs(tx_data.get('amount', 0)),
                     currency=tx_data.get('currency', '₹'),
                     category=tx_data.get('category', 'Other'),
                     tx_type=tx_data.get('type', 'expense'),
@@ -457,13 +457,21 @@ async def delete_finance(tx_id: str, user_id: str = Depends(verify_token), db: S
 
 @app.post("/api/finances/direct")
 async def add_finance_direct(payload: TransactionDirectPayload, user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
+    tx_type = payload.type.lower()
+    amount = payload.amount
+    
+    # Smart Auto-Detection for Income
+    income_keywords = ["salary", "income", "money received", "bonus", "dividend"]
+    if any(kw in payload.category.lower() for kw in income_keywords):
+        tx_type = "income"
+
     t = Transaction(
         id=str(uuid.uuid4()),
         user_id=user_id,
-        amount=payload.amount,
+        amount=amount,
         category=payload.category,
         description=payload.description,
-        tx_type=payload.type.lower(),
+        tx_type=tx_type,
         date=datetime.now(IST).strftime("%Y-%m-%d")
     )
     db.add(t)

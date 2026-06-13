@@ -17,6 +17,7 @@ const MoneyDashboard = ({ token }) => {
   const [editAmount, setEditAmount] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editType, setEditType] = useState('expense');
 
   // Report Modal State
   const [showReportPrompt, setShowReportPrompt] = useState(false);
@@ -120,15 +121,17 @@ const MoneyDashboard = ({ token }) => {
     setEditAmount(tx.amount);
     setEditCategory(tx.category);
     setEditDesc(tx.description);
+    setEditType(tx.type);
   };
 
   const saveEdit = async (e) => {
     e.preventDefault();
     try {
       const payload = {
-        amount: parseFloat(editAmount),
+        amount: Math.abs(parseFloat(editAmount)),
         category: editCategory,
-        description: editDesc
+        description: editDesc,
+        type: editType
       };
       const res = await fetch(`${API_BASE_URL}/api/finances/${editModal.tx.id}`, {
         method: "PUT",
@@ -341,6 +344,14 @@ const MoneyDashboard = ({ token }) => {
               <div className="form-group">
                 <label>Amount</label>
                 <input type="number" step="0.01" value={editAmount} onChange={e => setEditAmount(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Type</label>
+                <select value={editType} onChange={e => setEditType(e.target.value)}>
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                  <option value="save">Investment</option>
+                </select>
               </div>
               <div className="form-group">
                 <label>Category</label>
