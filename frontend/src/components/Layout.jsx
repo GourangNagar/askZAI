@@ -54,11 +54,11 @@ const Layout = ({ onLogout }) => {
             {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
           </button>
           <div className="nav-tabs">
-            <NavLink to="/chat" className={({ isActive }) => `tab-btn ${isActive ? 'active' : ''}`}>
-              Chat
-            </NavLink>
             <NavLink to="/money" className={({ isActive }) => `tab-btn ${isActive ? 'active' : ''}`}>
               Money
+            </NavLink>
+            <NavLink to="/chat" className={({ isActive }) => `tab-btn ${isActive ? 'active' : ''}`}>
+              Chat
             </NavLink>
             <NavLink to="/profile" className={({ isActive }) => `tab-btn ${isActive ? 'active' : ''}`}>
               Profile

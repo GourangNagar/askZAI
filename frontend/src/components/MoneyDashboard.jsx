@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 
 const MoneyDashboard = ({ token }) => {
   const [transactions, setTransactions] = useState([]);
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
@@ -28,28 +29,18 @@ const MoneyDashboard = ({ token }) => {
   // Profile Categories for Edit
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   // Date filtering state
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const changeMonth = (offset) => {
-    setCurrentMonth(prev => {
-      const d = new Date(prev);
-      d.setMonth(d.getMonth() + offset);
-      return d;
-    });
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
   };
 
-  const filteredTransactions = transactions.filter(t => {
-    if (!t.date) return false;
-    const d = new Date(t.date);
-    // Fallback if parsing fails
-    if (isNaN(d.getTime())) return true;
-    return d.getFullYear() === currentMonth.getFullYear() && d.getMonth() === currentMonth.getMonth();
-  });
+  useEffect(() => {
+    if (token) {
+      fetchData();
+    }
+  }, [currentMonth, token]);
 
   useEffect(() => {
     if (filteredTransactions.length >= 0) {
@@ -66,31 +57,46 @@ const MoneyDashboard = ({ token }) => {
     });
     observer.observe(document.body, { attributes: true });
     return () => observer.disconnect();
-  }, [transactions, currentMonth]);
+  }, [filteredTransactions, currentMonth]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch Transactions
-      const txRes = await fetch(`http://${window.location.hostname}:8001/api/finances`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (txRes.ok) {
-        setTransactions(await txRes.json());
-      }
-
       // Fetch Profile Categories
       const pRes = await fetch(`http://${window.location.hostname}:8001/api/profile`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (pRes.ok) {
         const pData = await pRes.json();
-        if (pData.custom_categories) setCategories(pData.custom_categories);
+        setCategories(['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Salary', 'Income', 'Groceries', 'Other', ...(pData.custom_categories || [])]);
       }
+
+      // Fetch Transactions
+      const res = await fetch(`http://${window.location.hostname}:8001/api/finances`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      
+      const targetMonthStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+      const filtered = data.filter(t => t.date && t.date.startsWith(targetMonthStr));
+      setFilteredTransactions(filtered);
+      setTransactions(data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatDateString = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    } catch {
+      return isoString;
     }
   };
 
@@ -261,7 +267,7 @@ const MoneyDashboard = ({ token }) => {
         </div>
         <div className="finance-card" style={{ borderLeft: '3px solid var(--save-color)' }}>
           <h3>Daily Budget</h3>
-          <p style={{ color: 'var(--save-color)' }}>₹{isCurrentMonth ? formatINR(perDayBudget) : '-'}</p>
+          <p style={{ color: 'var(--save-color)' }}>₹{isCurrentMonth ? formatINR(Number(perDayBudget)) : '-'}</p>
         </div>
       </div>
 
@@ -298,7 +304,7 @@ const MoneyDashboard = ({ token }) => {
                 <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>{t.category}</span>
               </div>
               <div className="memory-fact">{t.description}</div>
-              <div className="memory-meta"><span>{t.date}</span></div>
+              <div className="memory-meta"><span>{formatDateString(t.date)}</span></div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button className="edit-btn" onClick={() => openEdit(t)}><Pencil size={16} /></button>

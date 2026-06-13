@@ -13,6 +13,7 @@ import secrets
 
 import jwt
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -203,7 +204,7 @@ Keys required:
 - "category": (string) Pick ONE of these exact categories: {categories_str}. If none fit perfectly, pick the closest match or use "Other".
 - "type": (string) MUST be "income" for words like "salary", "wages", "pay", "bonus", or "received". If the user says "Pay 5000", treat "Pay" as a noun (salary/income), not a verb (spending). MUST be "expense" for buying, bills, or "paid". MUST be "save" for investments.
 - "description": (string) a brief description
-- "date": (string) use {{today}} unless a specific date is mentioned
+- "date": (string) MUST use the exact ISO8601 format "YYYY-MM-DD" (e.g. "2026-06-13"). If no date is mentioned, use {{today}}. Never use words like "Yesterday".
 
 User statement: {{text}}"""
     )
@@ -252,7 +253,7 @@ def build_dynamic_rag_chain(user_id: str, db: Session):
             "context":  fetch_finances,
             "history":  lambda x: "\n".join(x.get("history", [])) if x.get("history") else "No recent history.",
             "question": lambda x: x["question"],
-            "today":    lambda _: datetime.now().strftime("%A, %d %B %Y"),
+            "today":    lambda _: datetime.now().strftime("%Y-%m-%d"),
             "profile":  load_profile,
         }
         | RAG_PROMPT
@@ -335,15 +336,17 @@ async def webhook(
         if route == "FINANCE":
             # Load user's profile for custom categories
             profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-            cat_list = ["Groceries", "Income", "Other"]
+            base_categories = ["Food", "Transport", "Utilities", "Entertainment", "Shopping", "Salary", "Income", "Groceries", "Other"]
+            cat_list = base_categories.copy()
             if profile and profile.custom_categories:
                 try:
-                    cat_list = json.loads(profile.custom_categories)
+                    custom = json.loads(profile.custom_categories)
+                    cat_list.extend(custom)
                 except:
                     pass
                     
             finance_chain = build_dynamic_finance_chain(cat_list)
-            raw_json = finance_chain.invoke({"text": text, "today": today}).strip()
+            raw_json = finance_chain.invoke({"text": text, "today": datetime.now().strftime("%Y-%m-%d")}).strip()
             try:
                 if raw_json.startswith("```"):
                     raw_json = raw_json.split("\n", 1)[1].rsplit("\n", 1)[0]
@@ -352,7 +355,7 @@ async def webhook(
                 log.error(f"Failed to parse finance JSON: {raw_json} | Error: {e}")
                 return WebhookResponse(
                     action="error",
-                    message="Failed to parse financial details."
+                    message="I had trouble processing that transaction perfectly. Could you try rephrasing it?"
                 )
             else:
                 tx_id = str(uuid.uuid4())
@@ -467,16 +470,7 @@ async def generate_report(payload: ReportPayload, user_id: str = Depends(verify_
     
     all_tx = db.query(Transaction).filter(Transaction.user_id == user_id).all()
     
-    month_tx = []
-    for tx in all_tx:
-        try:
-            # tx.date is like "Saturday, 13 June 2026"
-            dt = datetime.strptime(tx.date, "%A, %d %B %Y")
-            tx_month_str = dt.strftime("%Y-%m")
-            if tx_month_str == payload.month:
-                month_tx.append(tx)
-        except ValueError:
-            pass
+    month_tx = [tx for tx in all_tx if tx.date.startswith(payload.month)]
             
     if not month_tx:
         return {"report": "No transactions logged for this month. Start tracking your money if you want to fix your finances."}
