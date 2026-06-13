@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Coins, User, Lock, ArrowRight, Wallet, Shield } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
