@@ -18,6 +18,14 @@ Zai is engineered for scale, privacy, and low-latency responses, leveraging a mo
 - **Multi-Tenant FastAPI Backend:** A highly concurrent **FastAPI** server using secure **JWT-based authentication** and **Bcrypt** hashing.
 - **Serverless Cloud Deployment:** The React frontend is deployed globally via **Vercel**, the FastAPI backend is hosted on **Render**, and all persistent data is securely stored in a scalable **Supabase PostgreSQL** database.
 
+### ⚡ UX & Performance Engineering (The Struggle for "0ms")
+Building a web app was easy; making it feel indistinguishable from a native iOS app was the real challenge. 
+- **Zero-Unmount Tab Switching:** Standard React Router destroyed components on tab switch, wiping chat history and causing painful database re-fetches. Zai mounts all tabs concurrently and uses CSS visibility to instantly slide them in and out, achieving true `0ms` latency tab switching.
+- **Optimistic UI:** To combat network latency, all edits and deletions instantly update the UI locally before the server responds, resulting in a buttery-smooth, frictionless experience.
+- **Persistent Local Caching:** Chat history is stored in the browser's `localStorage`, ensuring that even if the app is force-quit, the conversation memory survives.
+- **Silent Background Sync:** When returning from an iOS shortcut, the app detects the visibility change and silently fetches new data in the background without intrusive loading spinners.
+- **Bulletproof Backend Sanitization:** Attempting to handle "Income vs Expense" through negative math hacks on the frontend corrupted charts and broke UX. The Python backend now mathematically sanitizes all inputs and uses semantic keyword scanning (e.g., `Salary`, `Dividend`) to forcefully and invisibly categorize incomes correctly.
+
 ---
 
 ## 🚀 How to Use Zai
