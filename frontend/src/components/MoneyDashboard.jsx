@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
-import { Pencil, Trash2, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Pencil, Trash2, ChevronLeft, ChevronRight, FileText, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
@@ -43,6 +43,15 @@ const MoneyDashboard = ({ token }) => {
     if (token) {
       fetchData();
     }
+    
+    // Auto-refresh when app comes back to foreground (e.g. returning from Shortcuts)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && token) {
+        fetchData();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [currentMonth, token]);
 
   useEffect(() => {
@@ -65,25 +74,24 @@ const MoneyDashboard = ({ token }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch Profile Categories
-      const pRes = await fetch(`${API_BASE_URL}/api/profile`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+      // Fetch concurrently to halve loading times!
+      const [pRes, res] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/profile`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/api/finances`, { headers: { "Authorization": `Bearer ${token}` } })
+      ]);
+
       if (pRes.ok) {
         const pData = await pRes.json();
         setCategories(['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Salary', 'Income', 'Investment', 'Groceries', 'Other', ...(pData.custom_categories || [])]);
       }
 
-      // Fetch Transactions
-      const res = await fetch(`${API_BASE_URL}/api/finances`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      
-      const targetMonthStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
-      const filtered = data.filter(t => t.date && t.date.startsWith(targetMonthStr));
-      setFilteredTransactions(filtered);
-      setTransactions(data);
+      if (res.ok) {
+        const data = await res.json();
+        const targetMonthStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        const filtered = data.filter(t => t.date && t.date.startsWith(targetMonthStr));
+        setFilteredTransactions(filtered);
+        setTransactions(data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -105,12 +113,16 @@ const MoneyDashboard = ({ token }) => {
 
   const deleteTx = async (id) => {
     if (!window.confirm("Delete transaction?")) return;
+    
+    // Instant UI update (Optimistic Deletion)
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    setFilteredTransactions(prev => prev.filter(t => t.id !== id));
+    
     try {
       await fetch(`${API_BASE_URL}/api/finances/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
-      setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error(err);
     }
@@ -133,7 +145,14 @@ const MoneyDashboard = ({ token }) => {
         description: editDesc,
         type: editType
       };
-      const res = await fetch(`${API_BASE_URL}/api/finances/${editModal.tx.id}`, {
+      
+      // Instant UI update (Optimistic Editing)
+      const updatedTx = { ...editModal.tx, ...payload };
+      setTransactions(prev => prev.map(t => t.id === updatedTx.id ? updatedTx : t));
+      setFilteredTransactions(prev => prev.map(t => t.id === updatedTx.id ? updatedTx : t));
+      setEditModal({ show: false, tx: null });
+
+      const res = await fetch(`${API_BASE_URL}/api/finances/${updatedTx.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -141,9 +160,9 @@ const MoneyDashboard = ({ token }) => {
         },
         body: JSON.stringify(payload)
       });
-      if (res.ok) {
-        setEditModal({ show: false, tx: null });
-        fetchData(); // Refresh to ensure data integrity
+      
+      if (!res.ok) {
+        fetchData(); // Fallback if server rejects
       }
     } catch (err) {
       console.error(err);
@@ -254,7 +273,7 @@ const MoneyDashboard = ({ token }) => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <div className="month-picker">
+      <div className="month-picker" style={{ position: 'relative' }}>
         <button className="month-nav" onClick={() => changeMonth(-1)}><ChevronLeft size={24} /></button>
         <span style={{ color: 'var(--primary)' }}>{displayMonth}</span>
         <button className="month-nav" onClick={() => changeMonth(1)}><ChevronRight size={24} /></button>
