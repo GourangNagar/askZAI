@@ -19,7 +19,9 @@ Zai is engineered for scale, privacy, and low-latency responses, leveraging a mo
 - **Serverless Cloud Deployment:** The React frontend is deployed globally via **Vercel**, the FastAPI backend is hosted on **Render**, and all persistent data is securely stored in a scalable **Supabase PostgreSQL** database.
 
 ### ⚡ UX & Performance Engineering (The Struggle for "0ms")
-Building a web app was easy; making it feel indistinguishable from a native iOS app was the real challenge. 
+
+Building a web app was easy; making it feel indistinguishable from a native iOS app was the real challenge.
+
 - **Zero-Unmount Tab Switching:** Standard React Router destroyed components on tab switch, wiping chat history and causing painful database re-fetches. Zai mounts all tabs concurrently and uses CSS visibility to instantly slide them in and out, achieving true `0ms` latency tab switching.
 - **Optimistic UI:** To combat network latency, all edits and deletions instantly update the UI locally before the server responds, resulting in a buttery-smooth, frictionless experience.
 - **Persistent Local Caching:** Chat history is stored in the browser's `localStorage`, ensuring that even if the app is force-quit, the conversation memory survives.
@@ -30,11 +32,13 @@ Building a web app was easy; making it feel indistinguishable from a native iOS 
 
 ## 🚀 How to Use Zai
 
-If Zai is already deployed on the cloud, here is how you use it:
+Zai is already deployed on the cloud, here is how you use it:
+
+**[Visit Zai Here](https://ask-zai.vercel.app)**
 
 ### 1. Create Your Account
 
-1. Open your Zai Live URL in your browser.
+1. Open your Zai Live URL in your browser, add the shortcut to your home screen for quick access.
 2. Click **Create an Account**.
 3. Enter your Name, Email, and a secure Password.
 4. *Important:* Write down your **12-Word Recovery Phrase**. If you ever forget your password, this is the *only* way to reset it!
@@ -59,98 +63,15 @@ Click the **Profile** tab in the top right. This is the "Brain Control Center" f
 
 ## 📱 Automating Zai with Apple Shortcuts (iOS)
 
-You can turn Zai into an offline, lightning-fast expense tracker using Apple Shortcuts! This setup allows you to log expenses in 2 seconds, and your phone will secretly batch-sync them to Zai at midnight to save API costs.
+You can turn Zai into a lightning-fast expense tracker that works from anywhere on your iPhone in less than 2 seconds.
 
-### Step 1: Get Your API Token
+**[Download the 1-Click Zai iOS Shortcut Here](https://www.icloud.com/shortcuts/96379ec0caf6473fa363c90ce961eecc)**
 
-1. Log into Zai on your phone or computer.
-2. Go to the **Profile** tab.
-3. Tap the **Copy API Token** button. This massive string of text is your digital passport.
+### How to set it up
 
-### Step 2: The "Log Expense" Shortcut
+1. Tap the link above on your iPhone to download the **Zai** shortcut.
+2. Open the shortcut settings.
+3. Replace the placeholder `email` and `password` variables with the exact credentials you used to sign up for your Zai account.
+4. Add the shortcut to your home screen!
 
-This shortcut asks what you bought and saves it silently to your phone.
-
-1. Open the **Shortcuts app** on your iPhone and tap **+** to create a new shortcut. Name it "Log Expense".
-2. Add an **Ask for Input** action (Prompt: "What did you buy?", Type: Text).
-3. Add another **Ask for Input** action (Prompt: "How much?", Type: Number).
-4. Add a **Text** action and type: `I spent [Provided Input (Number)] on [Provided Input (Text)].`
-5. Add an **Append to File** action.
-   - Set it to Append **Text** to File.
-   - Tap "File" and select **iCloud Drive** -> **Shortcuts**.
-   - Set File Path to `kai_expenses.txt` and ensure "Make New Line" is checked.
-6. Add this shortcut to your home screen! Tap it anytime you buy something.
-
-### Step 3: The "Sync Zai" Shortcut
-
-This shortcut reads your expenses and sends them to your private Zai vault.
-
-1. Create a new shortcut named "Sync Zai".
-2. Add the **Get File** action (Turn OFF "Show Document Picker", Path: `kai_expenses.txt`, Turn OFF "Error If Not Found"). *Ensure this is explicitly pulling from the `Shortcuts` folder!*
-3. Add an **If** action: If **File** `has any value`.
-4. Inside the If block, add a **Text** action: `Here are my expenses for today: [File]`
-5. Inside the If block, add a **Get Contents of URL** action:
-   - URL: `https://askzai.onrender.com/webhook`
-   - Method: **POST**
-   - Headers: Key = `Authorization`, Text = `Bearer <PASTE_YOUR_API_TOKEN_HERE>`
-   - Request Body: **JSON**
-   - Add field: `text` (Text) = `[Text]` (from step 4)
-   - Add field: `source` (Text) = `ios_midnight_batch`
-6. To avoid iOS privacy popups asking for permission to delete files, we will use an overwrite hack!
-7. Still inside the If block, add a blank **Text** action (do not type anything inside it).
-8. Add a **Save File** action. Set it to save the blank `[Text]` to `kai_expenses.txt`. Tap the arrow on the block and turn **ON** `Overwrite If File Exists`.
-
-### Step 4: Midnight Automation
-
-1. Go to the **Automation** tab in Shortcuts.
-2. Create a new **Time of Day** automation for `11:59 PM` (Daily).
-3. Choose **Run Immediately** (do NOT ask before running).
-4. Select your **"Sync Zai"** shortcut.
-
-*Done! Your expenses now log instantly and sync seamlessly in your sleep!*
-
----
-
-## 💻 Tech Setup & Initialization (For Developers)
-
-To host Zai yourself, follow these steps:
-
-### 1. Environment Setup
-
-Clone the repository and set up your `.env` file:
-
-```bash
-git clone https://gitlab.com/gourang1/askkai.git
-cd askkai
-cp .env.example .env
-```
-
-Edit your `.env` and configure:
-
-- `OPENAI_API_KEY`: Your OpenAI Key (`sk-proj-...`)
-- `JWT_SECRET`: A long, random, secure string used to sign user tokens.
-- `DATABASE_URL`: Your Supabase PostgreSQL Connection String.
-
-### 2. Local Initialization
-
-```bash
-# Create a virtual environment
-python -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-Open **<http://localhost:8000>** in your browser.
-
-### 3. Cloud Deployment
-
-Zai is fully containerized and designed for separated front-end/back-end hosting:
-
-1. **Database:** Create a free [Supabase](https://supabase.com) project and copy your PostgreSQL connection string into `DATABASE_URL`.
-2. **Backend (Render):** Connect your GitHub repository to a Render Web Service. Ensure you set the `DATABASE_URL`, `OPENAI_API_KEY`, and `JWT_SECRET` environment variables.
-3. **Frontend (Vercel):** Connect your GitHub repository to Vercel. Set the `VITE_API_URL` environment variable to your live Render URL (e.g., `https://askzai.onrender.com`).
+Now, whenever you buy something, just tap Zai on your home screen, type the amount and category, and it will instantly sync to your live database.
