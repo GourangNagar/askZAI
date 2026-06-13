@@ -541,3 +541,34 @@ body.light-theme .month-nav { color: var(--text-main); }
   font-size: 1.5rem;
   cursor: pointer;
 }
+
+/* Mobile Responsiveness for Header */
+@media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .brand {
+    justify-content: center;
+    width: 100%;
+  }
+  header > div:nth-child(2) {
+    width: 100%;
+    gap: 0.5rem !important;
+  }
+  .nav-tabs {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+  }
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  h1 {
+    font-size: 1rem;
+  }
+}
